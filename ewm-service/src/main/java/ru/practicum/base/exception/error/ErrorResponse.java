@@ -1,13 +1,12 @@
-package ru.practicum.exception;
+package ru.practicum.base.exception.error;
 
-import lombok.Data;
-import ru.practicum.mapper.DateTimeMapper;
+import lombok.Getter;
+import ru.practicum.base.mapper.DateTimeMapper;
 
 import java.time.LocalDateTime;
 
-@Data
+@Getter
 public class ErrorResponse {
-
     private String status;
     private String reason;
     private String message;
