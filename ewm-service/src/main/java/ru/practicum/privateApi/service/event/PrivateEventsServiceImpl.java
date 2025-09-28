@@ -13,9 +13,9 @@ import ru.practicum.base.dto.event.*;
 import ru.practicum.base.dto.request.ParticipationRequestDto;
 import ru.practicum.base.enums.State;
 import ru.practicum.base.enums.UserStateAction;
-import ru.practicum.base.exception.ValidationException;
 import ru.practicum.base.exception.ConflictException;
 import ru.practicum.base.exception.NotFoundException;
+import ru.practicum.base.exception.ValidationException;
 import ru.practicum.base.mapper.EventMapper;
 import ru.practicum.base.mapper.RequestMapper;
 import ru.practicum.base.model.Category;
@@ -76,7 +76,6 @@ public class PrivateEventsServiceImpl implements PrivateEventsService {
         setDefaultValue(eventDto);
         Event event = EventMapper.toEntity(eventDto);
         event.setCategory(getCategory(eventDto.getCategory()));
-        // event.setConfirmedRequests(0L);
         event.setPublishedOn(LocalDateTime.now());
         event.setInitiator(getUser(userId));
         event.setViews(0L);
@@ -87,7 +86,7 @@ public class PrivateEventsServiceImpl implements PrivateEventsService {
     @Transactional
     @Override
     public EventFullDto update(Long userId, Long eventId, UpdateEventUserRequest eventDto) {
-        log.info("Обновление события: {} с ID = {} и ID пользователя = {}", eventDto,  eventId, userId);
+        log.info("Обновление события: {} с ID = {} и ID пользователя = {}", eventDto, eventId, userId);
         Event eventTarget = getEvent(userId, eventId);
         checkEventDate(eventDto.getEventDate());
 
@@ -123,18 +122,16 @@ public class PrivateEventsServiceImpl implements PrivateEventsService {
         String status = request.getStatus();
 
         if (status.equals(REJECTED.toString())) {
-            if (status.equals(REJECTED.toString())) {
-                boolean isConfirmedRequestExists = requests.stream()
-                        .anyMatch(r -> r.getStatus().equals(CONFIRMED));
-                if (isConfirmedRequestExists) {
-                    throw new ConflictException("Невозможно отклонить подтвержденные запросы");
-                }
-                rejectedRequests = requests.stream()
-                        .peek(r -> r.setStatus(REJECTED))
-                        .map(RequestMapper::toParticipationRequestDto)
-                        .collect(Collectors.toList());
-                return new EventRequestStatusUpdateResult(confirmedRequests, rejectedRequests);
+            boolean isConfirmedRequestExists = requests.stream()
+                    .anyMatch(r -> r.getStatus().equals(CONFIRMED));
+            if (isConfirmedRequestExists) {
+                throw new ConflictException("Невозможно отклонить подтвержденные запросы");
             }
+            rejectedRequests = requests.stream()
+                    .peek(r -> r.setStatus(REJECTED))
+                    .map(RequestMapper::toParticipationRequestDto)
+                    .collect(Collectors.toList());
+            return new EventRequestStatusUpdateResult(confirmedRequests, rejectedRequests);
         }
 
         Event event = eventRepository.findByIdAndInitiatorId(eventId, userId)
