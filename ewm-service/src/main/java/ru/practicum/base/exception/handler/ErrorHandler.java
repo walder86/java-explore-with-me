@@ -1,15 +1,15 @@
 package ru.practicum.base.exception.handler;
 
+import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import ru.practicum.base.exception.*;
 import ru.practicum.base.exception.error.ErrorResponse;
-
-import jakarta.validation.ConstraintViolationException;
 
 @Slf4j
 @RestControllerAdvice
@@ -75,6 +75,26 @@ public class ErrorHandler {
                 HttpStatus.BAD_REQUEST.toString(),
                 "Ошибка валидации",
                 e.getMessage());
+    }
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    public ErrorResponse handleForbiddenException(DeniedAccess e) {
+        log.error(e.getLocalizedMessage(), e.getMessage());
+        return new ErrorResponse(
+                HttpStatus.FORBIDDEN.toString(),
+                "Отсутствуют права",
+                e.getMessage());
+    }
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleForbiddenException(MethodArgumentTypeMismatchException e) {
+        log.error(e.getLocalizedMessage(), e.getMessage());
+        return new ErrorResponse(
+                HttpStatus.BAD_REQUEST.toString(),
+                "Некорректный запрос",
+                String.format("Параметр %s не может принимать значение %s", e.getName(), e.getValue()));
     }
 
 }
